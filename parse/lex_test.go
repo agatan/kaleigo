@@ -6,13 +6,15 @@ import (
 )
 
 func TestLex(t *testing.T) {
-	lexer := lex("test", "abc, 123.4;def")
+	lexer := lex("test", "abc, 123.4;def ( )")
 	expected := []token{
 		{kind: tokIdentifier, value: "abc"},
 		{kind: tokComma, value: ","},
 		{kind: tokNumber, value: "123.4"},
 		{kind: tokSemi, value: ";"},
 		{kind: tokDef, value: "def"},
+		{kind: tokLparen, value: "("},
+		{kind: tokRparen, value: ")"},
 		{kind: tokEOF, value: ""},
 	}
 

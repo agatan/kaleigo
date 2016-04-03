@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/agatan/kaleigo/ast"
 
@@ -17,13 +18,50 @@ type Generator struct {
 }
 
 // New creates a new llvm code generator
-func New(name string) *Generator {
+func NewGenerator(name string) *Generator {
 	return &Generator{
 		ctx:     llvm.GlobalContext(),
 		mod:     llvm.NewModule(name),
 		builder: llvm.NewBuilder(),
 		values:  make(map[string]llvm.Value),
 	}
+}
+
+func (g *Generator) Dispose() {
+	g.mod.Dispose()
+	g.builder.Dispose()
+}
+
+func EmitBitCode(fileast *ast.File, out io.Writer) error {
+	g := NewGenerator("kaleigo")
+	defer g.Dispose()
+
+	for _, extern := range fileast.Externs {
+		_, err := g.GenProto(extern)
+		if err != nil {
+			return err
+		}
+	}
+	for _, def := range fileast.Defs {
+		_, err := g.GenFun(def)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := g.GenFun(fileast.CreateMain())
+	if err != nil {
+		return err
+	}
+
+	buf := llvm.WriteBitcodeToMemoryBuffer(g.mod)
+	defer buf.Dispose()
+	bb := buf.Bytes()
+
+	if _, err := out.Write(bb); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (g *Generator) error(err error) error {
@@ -89,6 +127,18 @@ func (g *Generator) GenExpr(expr ast.Expr) (val llvm.Value, err error) {
 		}
 
 		return g.builder.CreateCall(f, args, "calltmp"), nil
+
+	case *ast.BlockExpr:
+		var last llvm.Value
+		var err error
+		for _, e := range e.Exprs {
+			last, err = g.GenExpr(e)
+			if err != nil {
+				return last, err
+			}
+		}
+		return last, nil
+
 	default:
 		panic("internal compiler error")
 	}

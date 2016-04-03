@@ -236,7 +236,7 @@ func isSpace(r rune) bool {
 }
 
 func isEOL(r rune) bool {
-	return r == '\n' || r == '\r' || r == eof
+	return r == '\n' || r == '\r'
 }
 
 func skipWhite(l *lexer) {

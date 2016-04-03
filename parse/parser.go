@@ -30,14 +30,6 @@ func New(name, input string) *Parser {
 	}
 }
 
-type ToplevelType int
-
-const (
-	ToplevelExtern ToplevelType = iota
-	ToplevelDef
-	ToplevelOther
-)
-
 func (p *Parser) next() token {
 	if p.peekCount > 0 {
 		p.peekCount--
@@ -71,29 +63,33 @@ func (p *Parser) tokenPrecedence(token rune) int {
 	return -1
 }
 
-func (p *Parser) ToplevelKind() ToplevelType {
-	switch p.peek().kind {
-	case tokDef:
-		return ToplevelDef
-	case tokExtern:
-		return ToplevelExtern
-	default:
-		return ToplevelOther
+// Parse consumes and parses all of source code.
+func (p *Parser) Parse() *ast.File {
+	f := &ast.File{
+		Name: p.lex.name,
 	}
-}
-
-// ParseTopLevelExpr consumes a expression and wrap it with anonymous function.
-func (p *Parser) ParseTopLevelExpr() *ast.Function {
-	expr := p.parseExpression()
-	proto := &ast.Prototype{}
-	return &ast.Function{Prototype: proto, Body: expr}
+	for p.peek().kind != tokEOF {
+		switch p.peek().kind {
+		case tokDef:
+			d := p.ParseDefinition()
+			f.Defs = append(f.Defs, d)
+		case tokExtern:
+			f.Externs = append(f.Externs, p.ParseExtern())
+		case tokSemi:
+			// ignore
+			p.next()
+		default:
+			f.Exprs = append(f.Exprs, p.ParseExpression())
+		}
+	}
+	return f
 }
 
 // ParseDefinition consumes a function definition.
 func (p *Parser) ParseDefinition() *ast.Function {
 	p.next()
 	proto := p.parsePrototype()
-	body := p.parseExpression()
+	body := p.ParseExpression()
 	return &ast.Function{Prototype: proto, Body: body}
 }
 
@@ -133,7 +129,8 @@ func (p *Parser) parsePrototype() *ast.Prototype {
 	return &ast.Prototype{Name: name, Args: args}
 }
 
-func (p *Parser) parseExpression() ast.Expr {
+// ParseExpression recognizes an expression and consumes it.
+func (p *Parser) ParseExpression() ast.Expr {
 	lhs := p.parsePrimary()
 	return p.parseBinOpRHS(0, lhs)
 }
@@ -190,7 +187,7 @@ func (p *Parser) parseIdentifier() ast.Expr {
 	args := []ast.Expr{}
 	if p.peek().kind != tokRparen {
 		for {
-			args = append(args, p.parseExpression())
+			args = append(args, p.ParseExpression())
 			if p.peek().kind == tokRparen {
 				break
 			}
@@ -209,7 +206,7 @@ func (p *Parser) parseIdentifier() ast.Expr {
 func (p *Parser) parseParenExpr() ast.Expr {
 	// skip '('
 	p.next()
-	expr := p.parseExpression()
+	expr := p.ParseExpression()
 	if p.peek().kind != tokRparen {
 		p.error(fmt.Errorf("expected ')'"))
 	}

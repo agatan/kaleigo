@@ -15,6 +15,7 @@ const (
 	ExprBinary
 	ExprCall
 	ExprVariable
+	ExprBlock
 )
 
 type (
@@ -36,9 +37,14 @@ type (
 		Callee string
 		Args   []Expr
 	}
+
+	BlockExpr struct {
+		Exprs []Expr
+	}
 )
 
 func (*NumberExpr) ExprKind() ExprType   { return ExprNumber }
 func (*VariableExpr) ExprKind() ExprType { return ExprVariable }
 func (*BinaryExpr) ExprKind() ExprType   { return ExprBinary }
 func (*CallExpr) ExprKind() ExprType     { return ExprCall }
+func (*BlockExpr) ExprKind() ExprType    { return ExprBlock }

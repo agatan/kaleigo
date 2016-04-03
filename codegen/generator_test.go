@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenFun(t *testing.T) {
-	g := New("test")
+	g := NewGenerator("test")
 	value, err := g.GenFun(&ast.Function{
 		Prototype: &ast.Prototype{
 			Name: "f",
@@ -28,7 +28,7 @@ func TestGenFun(t *testing.T) {
 }
 
 func TestGenExpr(t *testing.T) {
-	g := New("test")
+	g := NewGenerator("test")
 	value, err := g.GenExpr(&ast.NumberExpr{Val: 0.0})
 	if err != nil {
 		t.Fatal(err)
@@ -39,7 +39,7 @@ func TestGenExpr(t *testing.T) {
 }
 
 func TestGenExtern(t *testing.T) {
-	g := New("test")
+	g := NewGenerator("test")
 	value, err := g.GenProto(&ast.Prototype{Name: "cos", Args: []string{"x"}})
 	if err != nil {
 		t.Fatal(err)

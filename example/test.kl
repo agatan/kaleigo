@@ -1,0 +1,9 @@
+extern putd(x);
+
+def f(x, y) x + y;
+
+putd(f(1, 2));
+
+extern cos(x);
+
+putd(cos(0));

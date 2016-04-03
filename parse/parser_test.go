@@ -9,7 +9,7 @@ import (
 
 func TestParseExpression(t *testing.T) {
 	p := New("test", "1 + 2 * 3")
-	expr := p.parseExpression()
+	expr := p.ParseExpression()
 	var expected ast.Expr = &ast.BinaryExpr{
 		Op:  '+',
 		LHS: &ast.NumberExpr{Val: 1.0},
@@ -50,6 +50,19 @@ func TestParseDefinition(t *testing.T) {
 			LHS: &ast.VariableExpr{Name: "x"},
 			RHS: &ast.VariableExpr{Name: "y"},
 		},
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("function definition parsing is wrong")
+	}
+}
+
+func TestParseCall(t *testing.T) {
+	p := New("test", "f()\n")
+	actual := p.ParseExpression()
+	expected := &ast.CallExpr{
+		Callee: "f",
+		Args:   []ast.Expr{},
 	}
 
 	if !reflect.DeepEqual(expected, actual) {

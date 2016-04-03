@@ -24,6 +24,8 @@ const (
 	tokIf
 	tokThen
 	tokElse
+	tokFor
+	tokIn
 
 	tokIdentifier
 	tokNumber
@@ -52,6 +54,8 @@ var keywords = map[string]tokenType{
 	"if":     tokIf,
 	"then":   tokThen,
 	"else":   tokElse,
+	"for":    tokFor,
+	"in":     tokIn,
 }
 
 var op = map[rune]tokenType{

@@ -17,6 +17,7 @@ const (
 	ExprVariable
 	ExprBlock
 	ExprIf
+	ExprFor
 )
 
 type (
@@ -48,6 +49,14 @@ type (
 		Then Expr
 		Else Expr
 	}
+
+	ForExpr struct {
+		Var   string
+		Start Expr
+		End   Expr
+		Step  Expr
+		Body  Expr
+	}
 )
 
 func (*NumberExpr) ExprKind() ExprType   { return ExprNumber }
@@ -56,3 +65,4 @@ func (*BinaryExpr) ExprKind() ExprType   { return ExprBinary }
 func (*CallExpr) ExprKind() ExprType     { return ExprCall }
 func (*BlockExpr) ExprKind() ExprType    { return ExprBlock }
 func (*IfExpr) ExprKind() ExprType       { return ExprIf }
+func (*ForExpr) ExprKind() ExprType      { return ExprFor }

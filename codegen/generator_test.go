@@ -81,3 +81,30 @@ func TestGenIfExpr(t *testing.T) {
 		t.Fatalf("generated llvm.Value from if expression is nil")
 	}
 }
+
+func TestGenForExpr(t *testing.T) {
+	g := NewGenerator("test")
+	value, err := g.GenFun(&ast.Function{
+		Prototype: &ast.Prototype{
+			Name: "testif",
+			Args: []string{},
+		},
+		Body: &ast.ForExpr{
+			Var:   "i",
+			Start: &ast.NumberExpr{Val: 1.0},
+			End: &ast.BinaryExpr{
+				Op:  '<',
+				LHS: &ast.VariableExpr{Name: "i"},
+				RHS: &ast.NumberExpr{Val: 10.0},
+			},
+			Step: &ast.NumberExpr{Val: 1.0},
+			Body: &ast.VariableExpr{Name: "i"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value.IsNil() {
+		t.Fatalf("generated llvm.Value from for expression is nil")
+	}
+}

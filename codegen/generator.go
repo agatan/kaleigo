@@ -188,6 +188,61 @@ func (g *Generator) GenExpr(expr ast.Expr) (val llvm.Value, err error) {
 		phi.AddIncoming([]llvm.Value{else_}, []llvm.BasicBlock{elsebb})
 		return phi, nil
 
+	case *ast.ForExpr:
+		start, err := g.GenExpr(e.Start)
+		if err != nil {
+			return start, err
+		}
+		parent := g.builder.GetInsertBlock().Parent()
+		preheaderBB := g.builder.GetInsertBlock()
+		loopBB := llvm.AddBasicBlock(parent, "loop")
+
+		g.builder.CreateBr(loopBB)
+
+		g.builder.SetInsertPointAtEnd(loopBB)
+		phi := g.builder.CreatePHI(llvm.DoubleType(), e.Var)
+		phi.AddIncoming([]llvm.Value{start}, []llvm.BasicBlock{preheaderBB})
+
+		oldVal, oldExists := g.values[e.Var]
+		g.values[e.Var] = phi
+
+		g.GenExpr(e.Body)
+
+		var step llvm.Value
+		if e.Step != nil {
+			step, err = g.GenExpr(e.Step)
+			if err != nil {
+				return step, err
+			}
+		} else {
+			step = llvm.ConstFloat(llvm.DoubleType(), 1.0)
+		}
+
+		next := g.builder.CreateFAdd(phi, step, "nextvar")
+
+		end, err := g.GenExpr(e.End)
+		if err != nil {
+			return end, err
+		}
+
+		end = g.builder.CreateFCmp(llvm.FloatONE, end, llvm.ConstFloat(llvm.DoubleType(), 0.0), "loopcond")
+
+		loopEndBB := g.builder.GetInsertBlock()
+		afterBB := llvm.AddBasicBlock(parent, "afterloop")
+
+		g.builder.CreateCondBr(end, loopBB, afterBB)
+		g.builder.SetInsertPointAtEnd(afterBB)
+
+		phi.AddIncoming([]llvm.Value{next}, []llvm.BasicBlock{loopEndBB})
+
+		if oldExists {
+			g.values[e.Var] = oldVal
+		} else {
+			delete(g.values, e.Var)
+		}
+
+		return llvm.ConstFloat(llvm.DoubleType(), 0.0), nil
+
 	default:
 		panic("internal compiler error")
 	}

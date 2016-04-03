@@ -87,3 +87,23 @@ func TestParseIf(t *testing.T) {
 		t.Errorf("if expression parsing is wrong")
 	}
 }
+
+func TestParseFor(t *testing.T) {
+	p := New("test", "for i = 1, i < n, 1.0 in i")
+	actual := p.ParseExpression()
+	expected := &ast.ForExpr{
+		Var:   "i",
+		Start: &ast.NumberExpr{Val: 1.0},
+		End: &ast.BinaryExpr{
+			Op:  '<',
+			LHS: &ast.VariableExpr{Name: "i"},
+			RHS: &ast.VariableExpr{Name: "n"},
+		},
+		Step: &ast.NumberExpr{Val: 1.0},
+		Body: &ast.VariableExpr{Name: "i"},
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("for expression parsing is wrong")
+	}
+}

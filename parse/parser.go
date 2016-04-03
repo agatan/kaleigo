@@ -164,6 +164,8 @@ func (p *Parser) parsePrimary() ast.Expr {
 		return p.parseParenExpr()
 	case tokIf:
 		return p.parseIfExpr()
+	case tokFor:
+		return p.parseForExpr()
 	}
 	p.errorf("unexpected token: %q", p.peek().value)
 	return nil
@@ -239,5 +241,49 @@ func (p *Parser) parseIfExpr() ast.Expr {
 		Cond: cond,
 		Then: then,
 		Else: else_,
+	}
+}
+
+func (p *Parser) parseForExpr() ast.Expr {
+	// skip 'for'
+	p.next()
+	if p.peek().kind != tokIdentifier {
+		p.errorf("expected identifier after for")
+	}
+
+	name := p.peek().value
+	p.next()
+	if p.peek().kind != tokEqual {
+		p.errorf("expected '=' after for")
+	}
+	p.next()
+
+	start := p.ParseExpression()
+	if p.peek().kind != tokComma {
+		p.errorf("expected ',' after for start value")
+	}
+	p.next()
+
+	end := p.ParseExpression()
+
+	var step ast.Expr
+	if p.peek().kind == tokComma {
+		p.next()
+		step = p.ParseExpression()
+	}
+
+	if p.peek().kind != tokIn {
+		p.errorf("expected 'in' after for")
+	}
+	p.next()
+
+	body := p.ParseExpression()
+
+	return &ast.ForExpr{
+		Var:   name,
+		Start: start,
+		End:   end,
+		Step:  step,
+		Body:  body,
 	}
 }

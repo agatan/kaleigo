@@ -7,3 +7,5 @@ putd(f(1, 2));
 extern cos(x);
 
 putd(cos(0));
+
+putd(2 < 1);

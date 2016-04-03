@@ -9,6 +9,12 @@ import (
 	"llvm.org/llvm/bindings/go/llvm"
 )
 
+func init() {
+	llvm.InitializeNativeTarget()
+	llvm.InitializeAllAsmParsers()
+	llvm.InitializeNativeAsmPrinter()
+}
+
 // Generator holds all information for llvm code generation.
 type Generator struct {
 	ctx     llvm.Context
@@ -32,10 +38,7 @@ func (g *Generator) Dispose() {
 	g.builder.Dispose()
 }
 
-func EmitBitCode(fileast *ast.File, out io.Writer) error {
-	g := NewGenerator("kaleigo")
-	defer g.Dispose()
-
+func (g *Generator) Emit(fileast *ast.File, out io.Writer) error {
 	for _, extern := range fileast.Externs {
 		_, err := g.GenProto(extern)
 		if err != nil {
@@ -53,15 +56,21 @@ func EmitBitCode(fileast *ast.File, out io.Writer) error {
 		return err
 	}
 
-	buf := llvm.WriteBitcodeToMemoryBuffer(g.mod)
-	defer buf.Dispose()
-	bb := buf.Bytes()
-
-	if _, err := out.Write(bb); err != nil {
+	target, err := llvm.GetTargetFromTriple(llvm.DefaultTargetTriple())
+	if err != nil {
 		return err
 	}
+	m := target.CreateTargetMachine(llvm.DefaultTargetTriple(), "", "",
+		llvm.CodeGenLevelNone, llvm.RelocDefault, llvm.CodeModelDefault)
 
-	return nil
+	buf, err := m.EmitToMemoryBuffer(g.mod, llvm.ObjectFile)
+	if err != nil {
+		return err
+	}
+	defer buf.Dispose()
+
+	_, err = out.Write(buf.Bytes())
+	return err
 }
 
 func (g *Generator) error(err error) error {

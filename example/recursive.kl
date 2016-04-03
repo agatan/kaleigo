@@ -1,0 +1,10 @@
+extern putd(x)
+
+def f(x)
+  if 0 < x then
+    f(x - 1)
+  else
+    putd(x)
+
+f(3)
+f(0.5)

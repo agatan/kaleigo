@@ -6,7 +6,7 @@ import (
 )
 
 func TestLex(t *testing.T) {
-	lexer := lex("test", "abc, 123.4;def ( )")
+	lexer := lex("test", "abc, 123.4;def ( ) if then else if1")
 	expected := []token{
 		{kind: tokIdentifier, value: "abc"},
 		{kind: tokComma, value: ","},
@@ -15,6 +15,10 @@ func TestLex(t *testing.T) {
 		{kind: tokDef, value: "def"},
 		{kind: tokLparen, value: "("},
 		{kind: tokRparen, value: ")"},
+		{kind: tokIf, value: "if"},
+		{kind: tokThen, value: "then"},
+		{kind: tokElse, value: "else"},
+		{kind: tokIdentifier, value: "if1"},
 		{kind: tokEOF, value: ""},
 	}
 

@@ -162,6 +162,8 @@ func (p *Parser) parsePrimary() ast.Expr {
 		return p.parseNumber()
 	case tokLparen:
 		return p.parseParenExpr()
+	case tokIf:
+		return p.parseIfExpr()
 	}
 	p.errorf("unexpected token: %q", p.peek().value)
 	return nil
@@ -212,4 +214,30 @@ func (p *Parser) parseParenExpr() ast.Expr {
 	}
 	p.next()
 	return expr
+}
+
+func (p *Parser) parseIfExpr() ast.Expr {
+	// skip 'if'
+	p.next()
+	cond := p.ParseExpression()
+
+	if p.peek().kind != tokThen {
+		p.error(fmt.Errorf("expected then"))
+	}
+	// eat 'then'
+	p.next()
+
+	then := p.ParseExpression()
+	if p.peek().kind != tokElse {
+		p.error(fmt.Errorf("expected else"))
+	}
+	// eat 'else'
+	p.next()
+
+	else_ := p.ParseExpression()
+	return &ast.IfExpr{
+		Cond: cond,
+		Then: then,
+		Else: else_,
+	}
 }

@@ -16,6 +16,7 @@ const (
 	ExprCall
 	ExprVariable
 	ExprBlock
+	ExprIf
 )
 
 type (
@@ -41,6 +42,12 @@ type (
 	BlockExpr struct {
 		Exprs []Expr
 	}
+
+	IfExpr struct {
+		Cond Expr
+		Then Expr
+		Else Expr
+	}
 )
 
 func (*NumberExpr) ExprKind() ExprType   { return ExprNumber }
@@ -48,3 +55,4 @@ func (*VariableExpr) ExprKind() ExprType { return ExprVariable }
 func (*BinaryExpr) ExprKind() ExprType   { return ExprBinary }
 func (*CallExpr) ExprKind() ExprType     { return ExprCall }
 func (*BlockExpr) ExprKind() ExprType    { return ExprBlock }
+func (*IfExpr) ExprKind() ExprType       { return ExprIf }

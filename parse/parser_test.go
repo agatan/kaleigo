@@ -69,3 +69,21 @@ func TestParseCall(t *testing.T) {
 		t.Errorf("function definition parsing is wrong")
 	}
 }
+
+func TestParseIf(t *testing.T) {
+	p := New("test", "if 2 < 3 then 1 else 2")
+	actual := p.ParseExpression()
+	expected := &ast.IfExpr{
+		Cond: &ast.BinaryExpr{
+			Op:  '<',
+			LHS: &ast.NumberExpr{Val: 2},
+			RHS: &ast.NumberExpr{Val: 3},
+		},
+		Then: &ast.NumberExpr{Val: 1},
+		Else: &ast.NumberExpr{Val: 2},
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("if expression parsing is wrong")
+	}
+}

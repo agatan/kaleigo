@@ -148,6 +148,46 @@ func (g *Generator) GenExpr(expr ast.Expr) (val llvm.Value, err error) {
 		}
 		return last, nil
 
+	case *ast.IfExpr:
+		cond, err := g.GenExpr(e.Cond)
+		if err != nil {
+			return cond, err
+		}
+		// cond == 0.0 ??
+		cond = g.builder.CreateFCmp(llvm.FloatONE, cond, llvm.ConstFloat(llvm.DoubleType(), 0.0), "ifcond")
+
+		// create basic blocks for if jump
+		parent := g.builder.GetInsertBlock().Parent()
+		thenbb := llvm.AddBasicBlock(parent, "then")
+		elsebb := llvm.AddBasicBlock(parent, "else")
+		mergebb := llvm.AddBasicBlock(parent, "ifcont")
+
+		g.builder.CreateCondBr(cond, thenbb, elsebb)
+
+		// then block
+		g.builder.SetInsertPointAtEnd(thenbb)
+		then, err := g.GenExpr(e.Then)
+		if err != nil {
+			return then, err
+		}
+		g.builder.CreateBr(mergebb)
+		thenbb = g.builder.GetInsertBlock()
+
+		// else block
+		g.builder.SetInsertPointAtEnd(elsebb)
+		else_, err := g.GenExpr(e.Else)
+		if err != nil {
+			return else_, err
+		}
+		g.builder.CreateBr(mergebb)
+		elsebb = g.builder.GetInsertBlock()
+
+		g.builder.SetInsertPointAtEnd(mergebb)
+		phi := g.builder.CreatePHI(llvm.DoubleType(), "iftmp")
+		phi.AddIncoming([]llvm.Value{then}, []llvm.BasicBlock{thenbb})
+		phi.AddIncoming([]llvm.Value{else_}, []llvm.BasicBlock{elsebb})
+		return phi, nil
+
 	default:
 		panic("internal compiler error")
 	}

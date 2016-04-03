@@ -21,6 +21,9 @@ const (
 
 	tokDef
 	tokExtern
+	tokIf
+	tokThen
+	tokElse
 
 	tokIdentifier
 	tokNumber
@@ -46,6 +49,9 @@ const (
 var keywords = map[string]tokenType{
 	"def":    tokDef,
 	"extern": tokExtern,
+	"if":     tokIf,
+	"then":   tokThen,
+	"else":   tokElse,
 }
 
 var op = map[rune]tokenType{
